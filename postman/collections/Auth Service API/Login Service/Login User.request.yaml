@@ -1,0 +1,43 @@
+schemaVersion: "3.0"
+name: Login User
+order: 4000
+type: http
+method: POST
+url: "{{baseUrl}}:{{loginServicePort}}/api/auth/login"
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |
+    {
+      "email": "{{randomEmail}}",
+      "password": "{{randomPassword}}"
+    }
+description: Login user and receive access token and refresh token (stored as HTTP-only cookie)
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: >
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+
+      pm.test('Response has accessToken', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('accessToken');
+          pm.collectionVariables.set('accessToken', jsonData.accessToken);
+      });
+
+
+      if (pm.response.json().refreshToken) {
+          pm.collectionVariables.set('refreshToken', pm.response.json().refreshToken);
+      }
+
+
+      pm.test('Response time is less than 1000ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+
+
+      postman.setNextRequest('Get All Active Sessions');

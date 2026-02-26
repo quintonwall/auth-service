@@ -1,0 +1,23 @@
+name: Service Info
+order: 2000
+type: http
+method: GET
+url: "{{baseUrl}}:{{loginServicePort}}/"
+description: Get information about the Login Service and available endpoints
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has service name', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('service');
+      });
+
+      pm.test('Response has version', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('version');
+      });

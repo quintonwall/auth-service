@@ -1,0 +1,22 @@
+name: Health Check
+order: 1000
+type: http
+method: GET
+url: "{{baseUrl}}:{{loginServicePort}}/health"
+description: Check if the Login Service is healthy and running
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has status field', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('status');
+      });
+
+      pm.test('Response time is less than 500ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });

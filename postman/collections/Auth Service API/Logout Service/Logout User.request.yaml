@@ -1,0 +1,24 @@
+name: Logout User
+order: 5000
+type: http
+method: POST
+url: "{{baseUrl}}:{{logoutServicePort}}/api/logout"
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: "{{accessToken}}"
+description: Logout user from current session. Blacklists the access token and removes refresh token.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response indicates success', function () {
+          const jsonData = pm.response.json();
+          const isSuccess = jsonData.success === true || jsonData.message;
+          pm.expect(isSuccess).to.be.true;
+      });

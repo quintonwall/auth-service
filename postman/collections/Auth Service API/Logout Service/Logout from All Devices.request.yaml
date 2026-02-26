@@ -1,0 +1,23 @@
+name: Logout from All Devices
+order: 3000
+type: http
+method: POST
+url: "{{baseUrl}}:{{logoutServicePort}}/api/logout-all"
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: "{{accessToken}}"
+description: Logout user from all devices by invalidating all refresh tokens
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response indicates success', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.success).to.be.true;
+      });

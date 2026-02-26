@@ -1,0 +1,29 @@
+name: Get User Profile
+order: 5000
+type: http
+method: GET
+url: "{{baseUrl}}:{{loginServicePort}}/api/auth/me"
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: "{{accessToken}}"
+description: Get the current user's profile information. Requires valid access token.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has user data', function () {
+          const jsonData = pm.response.json();
+          const hasUser = jsonData.hasOwnProperty('user') || jsonData.hasOwnProperty('email');
+          pm.expect(hasUser).to.be.true;
+      });
+
+      pm.test('Content-Type is JSON', function () {
+          pm.response.to.have.header('Content-Type');
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });

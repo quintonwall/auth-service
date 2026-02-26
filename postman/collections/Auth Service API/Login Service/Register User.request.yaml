@@ -1,0 +1,46 @@
+name: Register User
+order: 3000
+type: http
+method: POST
+url: "{{baseUrl}}:{{loginServicePort}}/api/auth/register"
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |
+    {
+      "email": "{{randomEmail}}",
+      "password": "{{randomPassword}}"
+    }
+description: |
+  Register a new user. Password must be 8-128 characters with at least one lowercase,
+  one uppercase, one number, and one special character.
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |
+      const randomNum = Math.floor(Math.random() * 100000);
+      const email = `testuser${randomNum}@example.com`;
+      const password = `TestPass${randomNum}!`;
+      pm.collectionVariables.set('randomEmail', email);
+      pm.collectionVariables.set('randomPassword', password);
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200 or 201', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+      });
+
+      pm.test('Response has accessToken or user', function () {
+          const jsonData = pm.response.json();
+          const hasToken = jsonData.hasOwnProperty('accessToken');
+          const hasUser = jsonData.hasOwnProperty('user') || jsonData.hasOwnProperty('id');
+          pm.expect(hasToken || hasUser).to.be.true;
+      });
+
+      if (pm.response.json().accessToken) {
+          pm.collectionVariables.set('accessToken', pm.response.json().accessToken);
+      }
+
+      pm.collectionVariables.set('userEmail', pm.collectionVariables.get('randomEmail'));
