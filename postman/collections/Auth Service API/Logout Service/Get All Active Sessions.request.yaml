@@ -1,0 +1,24 @@
+name: Get All Active Sessions
+order: 8000
+type: http
+method: GET
+url: "{{baseUrl}}:{{logoutServicePort}}/api/sessions"
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: "{{accessToken}}"
+description: Get all active sessions for the current user
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has sessions array', function () {
+          const jsonData = pm.response.json();
+          const hasSessions = jsonData.hasOwnProperty('sessions') || Array.isArray(jsonData);
+          pm.expect(hasSessions).to.be.true;
+      });

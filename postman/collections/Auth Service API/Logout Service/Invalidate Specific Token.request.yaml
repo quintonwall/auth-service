@@ -1,0 +1,33 @@
+name: Invalidate Specific Token
+order: 4000
+type: http
+method: POST
+url: "{{baseUrl}}:{{logoutServicePort}}/api/invalidate-token"
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: "{{accessToken}}"
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |
+    {
+      "token": "{{accessToken}}",
+      "tokenType": "access"
+    }
+description: Manually invalidate a specific token. Token type must be 'access' or 'refresh'.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response indicates success', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.success).to.be.true;
+      });

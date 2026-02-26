@@ -1,0 +1,19 @@
+name: Cleanup Expired Tokens
+order: 7000
+type: http
+method: POST
+url: "{{baseUrl}}:{{logoutServicePort}}/api/cleanup-tokens"
+description: Clean up expired blacklisted tokens. Maintenance endpoint for admin/service use.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200 or 202', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 202]);
+      });
+
+      pm.test('Response indicates cleanup result', function () {
+          const jsonData = pm.response.json();
+          const hasResult = jsonData.hasOwnProperty('success') || jsonData.hasOwnProperty('cleaned') || jsonData.hasOwnProperty('message');
+          pm.expect(hasResult).to.be.true;
+      });

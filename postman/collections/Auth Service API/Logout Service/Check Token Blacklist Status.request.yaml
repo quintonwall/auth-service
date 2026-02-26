@@ -1,0 +1,19 @@
+name: Check Token Blacklist Status
+order: 6000
+type: http
+method: GET
+url: "{{baseUrl}}:{{logoutServicePort}}/api/check-token/{{accessToken}}"
+description: Check if a token is blacklisted. Used for service-to-service communication.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test('Status code is 200 or 404', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 404]);
+      });
+
+      pm.test('Response has blacklist status', function () {
+          const jsonData = pm.response.json();
+          const hasStatus = jsonData.hasOwnProperty('blacklisted') || jsonData.hasOwnProperty('isBlacklisted') || jsonData.hasOwnProperty('status');
+          pm.expect(hasStatus).to.be.true;
+      });
