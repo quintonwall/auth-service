@@ -1,19 +1,55 @@
-name: Cleanup Expired Tokens
-order: 7000
-type: http
-method: POST
+$kind: http-request
+description: Clean up expired blacklisted tokens. Maintenance endpoint for
+  admin/service use.
 url: "{{baseUrl}}:{{logoutServicePort}}/api/cleanup-tokens"
-description: Clean up expired blacklisted tokens. Maintenance endpoint for admin/service use.
+method: POST
 scripts:
   - type: afterResponse
-    language: text/javascript
-    code: |
-      pm.test('Status code is 200 or 202', function () {
-          pm.expect(pm.response.code).to.be.oneOf([200, 202]);
+    code: >-
+      // Cleanup Expired Tokens Tests
+
+
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
       });
 
-      pm.test('Response indicates cleanup result', function () {
-          const jsonData = pm.response.json();
-          const hasResult = jsonData.hasOwnProperty('success') || jsonData.hasOwnProperty('cleaned') || jsonData.hasOwnProperty('message');
-          pm.expect(hasResult).to.be.true;
+
+      pm.test("Response time is acceptable (under 500ms)", function () {
+          pm.expect(pm.response.responseTime).to.be.below(500);
       });
+
+
+      pm.test("Content-Type header is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+
+      pm.test("Response has success field set to true", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("success");
+          pm.expect(jsonData.success).to.be.true;
+      });
+
+
+      pm.test("Response has message field", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("message");
+          pm.expect(jsonData.message).to.be.a("string");
+      });
+
+
+      pm.test("Response has data.removedTokens", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("data");
+          pm.expect(jsonData.data).to.have.property("removedTokens");
+          pm.expect(jsonData.data.removedTokens).to.be.a("number");
+      });
+
+
+      pm.test("Response has data.cleanupTime", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property("cleanupTime");
+          pm.expect(jsonData.data.cleanupTime).to.be.a("string");
+      });
+    language: text/javascript
+order: 7000
